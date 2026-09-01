@@ -2,3 +2,9 @@ node_modules/
 .env
 dist/
 build/
+
+# AI Agent directories
+.agents/
+.claude/
+.cursor/
+.devin/
