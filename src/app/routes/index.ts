@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { AuthRoutes } from '../modules/auth/auth.routes';
 import { GigRoutes } from '../modules/gig/gig.routes';
 import { OrderRoutes } from '../modules/order/order.routes';
+import { PaymentRoutes } from '../modules/payment/payment.routes';
 import { ProviderRoutes } from '../modules/provider/provider.routes';
 
 const router = Router();
@@ -22,6 +23,10 @@ const moduleRoutes = [
   {
     path: '/orders',
     route: OrderRoutes,
+  },
+  {
+    path: '/payments',
+    route: PaymentRoutes,
   },
 ];
 

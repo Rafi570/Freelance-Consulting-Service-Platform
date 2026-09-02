@@ -24,4 +24,15 @@ export default {
   otp: {
     expires_in_seconds: Number(process.env.OTP_EXPIRATION_SECONDS) || 300, // 5 minutes default
   },
+  stripe: {
+    publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || '',
+    secret_key: process.env.STRIPE_SECRET_KEY || '',
+    webhook_secret: process.env.STRIPE_WEBHOOK_SECRET || '',
+    success_url:
+      process.env.STRIPE_SUCCESS_URL ||
+      'http://localhost:3000/payment/success?session_id={CHECKOUT_SESSION_ID}',
+    cancel_url:
+      process.env.STRIPE_CANCEL_URL || 'http://localhost:3000/payment/cancel',
+    subscription_fee: 15.0, // $15 for provider premium subscription
+  },
 };

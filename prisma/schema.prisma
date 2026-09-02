@@ -38,6 +38,18 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum PaymentType {
+  ORDER
+  SUBSCRIPTION
+}
+
 model User {
   id        String     @id @default(uuid())
   name      String
@@ -48,9 +60,10 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  profile ProviderProfile?
-  gigs    Gig[]
-  orders  Order[]         @relation("ClientOrders")
+  profile  ProviderProfile?
+  gigs     Gig[]
+  orders   Order[]          @relation("ClientOrders")
+  payments Payment[]
 
   @@map("users")
 }
@@ -115,19 +128,42 @@ model GigPackage {
 }
 
 model Order {
-  id           String      @id @default(uuid())
-  clientId     String
-  client       User        @relation("ClientOrders", fields: [clientId], references: [id], onDelete: Cascade)
-  gigId        String
-  gig          Gig         @relation(fields: [gigId], references: [id], onDelete: Cascade)
-  packageId    String
-  package      GigPackage  @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  price        Float
-  status       OrderStatus @default(PENDING)
-  requirements String?
+  id            String        @id @default(uuid())
+  clientId      String
+  client        User          @relation("ClientOrders", fields: [clientId], references: [id], onDelete: Cascade)
+  gigId         String
+  gig           Gig           @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  packageId     String
+  package       GigPackage    @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  price         Float
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID)
+  requirements  String?
+
+  payment Payment?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("orders")
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId        String?       @unique
+  order          Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type           PaymentType   @default(ORDER)
+  transactionId  String?       @unique
+  sessionId      String?       @unique
+  amount         Float
+  currency       String        @default("usd")
+  status         PaymentStatus @default(UNPAID)
+  paymentGateway String        @default("STRIPE")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payments")
 }

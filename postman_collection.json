@@ -498,6 +498,96 @@
           }
         }
       ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "1. Create Order Checkout Session (Stripe)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"order_uuid_here\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/payments/create-order-checkout",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "payments", "create-order-checkout"]
+            }
+          }
+        },
+        {
+          "name": "2. Create Subscription Checkout Session (Provider Unlimited Gigs - $15)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/payments/create-subscription-checkout",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "payments", "create-subscription-checkout"]
+            }
+          }
+        },
+        {
+          "name": "3. Verify Payment Session by Session ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/payments/verify/:sessionId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "payments", "verify", ":sessionId"],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "cs_test_session_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Get My Payments History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/payments/my-payments",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "payments", "my-payments"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
