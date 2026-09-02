@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import Stripe from 'stripe';
 import config from '../../config';
 import AppError from '../../errors/AppError';
@@ -42,7 +43,7 @@ const createOrderCheckoutSession = async (userId: string, orderId: string) => {
             name: `${order.gig.title} (${order.package.tier} Package)`,
             description: `${order.package.name} - ${order.package.deliveryTimeInDays} days delivery`,
           },
-          unit_amount: Math.round(order.price * 100), // Stripe expects amounts in cents
+          unit_amount: Math.round(order.price * 100), // in cents
         },
         quantity: 1,
       },
@@ -162,7 +163,7 @@ const verifyPaymentSession = async (sessionId: string) => {
     if (paymentType === 'ORDER') {
       const orderId = session.metadata?.orderId;
       if (orderId) {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
           await tx.order.update({
             where: { id: orderId },
             data: {
@@ -202,7 +203,7 @@ const verifyPaymentSession = async (sessionId: string) => {
     } else if (paymentType === 'SUBSCRIPTION') {
       const userId = session.metadata?.userId;
       if (userId) {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
           await tx.providerProfile.update({
             where: { userId },
             data: { isSubscribed: true },
