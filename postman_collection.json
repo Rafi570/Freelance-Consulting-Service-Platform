@@ -496,6 +496,53 @@
               ]
             }
           }
+        },
+        {
+          "name": "4. Get Cancellation Reasons (For Dropdown)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/orders/cancellation-reasons",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "orders", "cancellation-reasons"]
+            }
+          }
+        },
+        {
+          "name": "5. Cancel Order (With Valid Reason)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancellationReason\": \"MUTUAL_AGREEMENT\",\n  \"cancellationNote\": \"Both client and provider agreed to cancel due to schedule changes.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/orders/:id/cancel",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "orders", ":id", "cancel"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order_uuid_here"
+                }
+              ]
+            }
+          }
         }
       ]
     },

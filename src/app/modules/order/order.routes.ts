@@ -6,6 +6,12 @@ import { OrderValidation } from './order.validation';
 
 const router = Router();
 
+// Get valid cancellation reasons list for dropdown
+router.get(
+  '/cancellation-reasons',
+  OrderController.getCancellationReasons
+);
+
 // Place a service order (CLIENT, PROVIDER, SUPER_ADMIN)
 router.post(
   '/',
@@ -28,12 +34,20 @@ router.get(
   OrderController.getSingleOrder
 );
 
-// Update order status
+// Update order status (IN_PROGRESS, COMPLETED, etc.)
 router.patch(
   '/:id/status',
   auth('CLIENT', 'PROVIDER', 'SUPER_ADMIN'),
   validateRequest(OrderValidation.updateOrderStatusValidationSchema),
   OrderController.updateOrderStatus
+);
+
+// Cancel order with valid reason (CLIENT, PROVIDER, SUPER_ADMIN)
+router.patch(
+  '/:id/cancel',
+  auth('CLIENT', 'PROVIDER', 'SUPER_ADMIN'),
+  validateRequest(OrderValidation.cancelOrderValidationSchema),
+  OrderController.cancelOrder
 );
 
 export const OrderRoutes = router;

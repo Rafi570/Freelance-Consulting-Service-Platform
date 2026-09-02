@@ -7,6 +7,66 @@ interface ICreateOrderPayload {
   requirements?: string;
 }
 
+interface ICancelOrderPayload {
+  cancellationReason:
+    | 'MUTUAL_AGREEMENT'
+    | 'PROVIDER_UNRESPONSIVE'
+    | 'REQUIREMENTS_MISMATCH'
+    | 'TECHNICAL_DIFFICULTIES'
+    | 'POOR_COMMUNICATION'
+    | 'DELAYED_DELIVERY'
+    | 'ORDERED_BY_MISTAKE'
+    | 'OTHER';
+  cancellationNote?: string;
+}
+
+const cancellationReasonsList = [
+  {
+    code: 'MUTUAL_AGREEMENT',
+    label: 'Mutual agreement between client and provider',
+    description: 'Both parties mutually agreed to cancel the order.',
+  },
+  {
+    code: 'PROVIDER_UNRESPONSIVE',
+    label: 'Provider is unresponsive or inactive',
+    description: 'The provider has stopped communicating or failed to deliver.',
+  },
+  {
+    code: 'REQUIREMENTS_MISMATCH',
+    label: 'Requirements mismatch or scope changed',
+    description: 'The requested service does not match the project scope.',
+  },
+  {
+    code: 'TECHNICAL_DIFFICULTIES',
+    label: 'Technical difficulties / unable to proceed',
+    description: 'Encountered unexpected technical blockers preventing completion.',
+  },
+  {
+    code: 'POOR_COMMUNICATION',
+    label: 'Communication issues or dissatisfaction',
+    description: 'Delays or misunderstandings in project requirements and goals.',
+  },
+  {
+    code: 'DELAYED_DELIVERY',
+    label: 'Delivery is significantly delayed',
+    description: 'Expected timeline was missed without acceptable reasons.',
+  },
+  {
+    code: 'ORDERED_BY_MISTAKE',
+    label: 'Ordered by mistake',
+    description: 'The wrong package or service was selected accidentally.',
+  },
+  {
+    code: 'OTHER',
+    label: 'Other reason',
+    description: 'Any other specific reason described in the cancellation note.',
+  },
+];
+
+const getCancellationReasons = () => {
+  return cancellationReasonsList;
+};
+
 const createOrder = async (clientId: string, payload: ICreateOrderPayload) => {
   // 1. Check if gig exists
   const gig = await prisma.gig.findUnique({
@@ -118,6 +178,7 @@ const getMyOrders = async (userId: string, role: string) => {
           email: true,
         },
       },
+      payment: true,
     },
   });
 
@@ -147,6 +208,7 @@ const getSingleOrder = async (userId: string, role: string, orderId: string) => 
           email: true,
         },
       },
+      payment: true,
     },
   });
 
@@ -221,9 +283,86 @@ const updateOrderStatus = async (
   return updatedOrder;
 };
 
+const cancelOrder = async (
+  userId: string,
+  role: string,
+  orderId: string,
+  payload: ICancelOrderPayload
+) => {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      gig: true,
+      payment: true,
+      client: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  if (!order) {
+    throw new AppError(404, 'Order not found.');
+  }
+
+  const isClient = order.clientId === userId;
+  const isProvider = order.gig.providerId === userId;
+  const isAdmin = role === 'SUPER_ADMIN';
+
+  if (!isClient && !isProvider && !isAdmin) {
+    throw new AppError(403, 'You are not authorized to cancel this order.');
+  }
+
+  if (order.status === 'COMPLETED') {
+    throw new AppError(400, 'Cannot cancel an order that has already been completed.');
+  }
+
+  if (order.status === 'CANCELLED') {
+    throw new AppError(400, 'This order is already cancelled.');
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    // If order was paid, mark payment status as REFUNDED
+    const paymentStatusUpdate =
+      order.paymentStatus === 'PAID' ? 'REFUNDED' : order.paymentStatus;
+
+    if (order.payment && order.payment.status === 'PAID') {
+      await tx.payment.update({
+        where: { id: order.payment.id },
+        data: { status: 'REFUNDED' },
+      });
+    }
+
+    const cancelledOrder = await tx.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'CANCELLED',
+        paymentStatus: paymentStatusUpdate,
+        cancellationReason: payload.cancellationReason,
+        cancellationNote: payload.cancellationNote,
+        cancelledBy: userId,
+        cancelledAt: new Date(),
+      },
+      include: {
+        gig: {
+          select: { id: true, title: true, category: true },
+        },
+        package: true,
+        client: {
+          select: { id: true, name: true, email: true },
+        },
+        payment: true,
+      },
+    });
+
+    return cancelledOrder;
+  });
+
+  return result;
+};
+
 export const OrderService = {
   createOrder,
   getMyOrders,
   getSingleOrder,
   updateOrderStatus,
+  getCancellationReasons,
+  cancelOrder,
 };
