@@ -224,6 +224,280 @@
           }
         }
       ]
+    },
+    {
+      "name": "Gigs",
+      "item": [
+        {
+          "name": "1. Create Gig with 3 Packages (BASIC, STANDARD, PREMIUM)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Full Stack Web Application Development in Next.js & PostgreSQL\",\n  \"description\": \"I will build scalable, high-performance modern web applications using React, Next.js, Node.js, Prisma, and PostgreSQL.\",\n  \"category\": \"Web Development\",\n  \"tags\": [\"Next.js\", \"React\", \"PostgreSQL\", \"Prisma\", \"TailwindCSS\"],\n  \"images\": [\"https://images.unsplash.com/photo-1555066931-4365d14bab8c\"],\n  \"packages\": [\n    {\n      \"tier\": \"BASIC\",\n      \"name\": \"Basic Consultation & Setup\",\n      \"description\": \"1 hour technical consultation, architecture review, and basic project setup boilerplate.\",\n      \"price\": 50,\n      \"deliveryTimeInDays\": 1,\n      \"revisions\": 1,\n      \"features\": [\"1hr Consultation\", \"Tech Stack Recommendation\", \"Boilerplate Setup\"]\n    },\n    {\n      \"tier\": \"STANDARD\",\n      \"name\": \"Standard Feature MVP\",\n      \"description\": \"Full MVP module with authentication, database models, and clean RESTful API integration.\",\n      \"price\": 200,\n      \"deliveryTimeInDays\": 3,\n      \"revisions\": 3,\n      \"features\": [\"Auth & Roles\", \"Database Schema\", \"Up to 5 API Endpoints\", \"Responsive UI\"]\n    },\n    {\n      \"tier\": \"PREMIUM\",\n      \"name\": \"Enterprise Full-Stack Solution\",\n      \"description\": \"Complete production-ready web application with Redis caching, Payment, CI/CD, and deployment.\",\n      \"price\": 500,\n      \"deliveryTimeInDays\": 7,\n      \"revisions\": 5,\n      \"features\": [\"Full Production App\", \"Payment Gateway\", \"Redis Caching\", \"Email System\", \"Free 30-Day Support\"]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/gigs",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "gigs"]
+            }
+          }
+        },
+        {
+          "name": "2. Get All Gigs (Search & Filter)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/gigs?searchTerm=Next.js&minPrice=40&maxPrice=600&page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "gigs"],
+              "query": [
+                {
+                  "key": "searchTerm",
+                  "value": "Next.js"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "40"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "600"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Get My Gigs (Check 4-Gig Limit & Subscription)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/gigs/my-gigs",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "gigs", "my-gigs"]
+            }
+          }
+        },
+        {
+          "name": "4. Get Single Gig by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/gigs/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "gigs", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "gig_uuid_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Update Gig & Packages",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Advanced Full Stack Cloud & Next.js Architecture\",\n  \"packages\": [\n    {\n      \"tier\": \"BASIC\",\n      \"name\": \"Quick Consultation\",\n      \"description\": \"Updated 1 hour consultation\",\n      \"price\": 60,\n      \"deliveryTimeInDays\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/gigs/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "gigs", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "gig_uuid_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Toggle/Disable/Enable Gig Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAUSED\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/gigs/:id/toggle-status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "gigs", ":id", "toggle-status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "gig_uuid_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Delete Gig",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/gigs/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "gigs", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "gig_uuid_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "1. Place Service Order (Choose Gig Package)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gigId\": \"gig_uuid_here\",\n  \"packageId\": \"package_uuid_here\",\n  \"requirements\": \"Please develop a Next.js landing page and integrate with PostgreSQL database.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/orders",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "orders"]
+            }
+          }
+        },
+        {
+          "name": "2. Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/orders/my-orders",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "orders", "my-orders"]
+            }
+          }
+        },
+        {
+          "name": "3. Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/orders/:id/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "orders", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "order_uuid_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }
