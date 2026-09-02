@@ -13,16 +13,22 @@
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
     "express": "^5.2.1",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^9.1.1",
     "prisma": "^6.4.1",
+    "resend": "^6.25.0",
     "zod": "^4.5.4"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
+    "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^8.0.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   }

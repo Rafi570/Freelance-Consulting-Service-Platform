@@ -1,16 +1,22 @@
 import { Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
+import { AuthService } from '../auth/auth.service';
 import { ProviderService } from './provider.service';
 
 const createProvider = catchAsync(async (req: Request, res: Response) => {
-  const result = await ProviderService.createProviderIntoDB(req.body);
+  const result = await AuthService.registerUser({
+    ...req.body,
+    role: 'PROVIDER',
+  });
 
   sendResponse(res, {
-    statusCode: 201,
+    statusCode: 200,
     success: true,
-    message: 'Provider account created successfully!',
-    data: result,
+    message: result.message,
+    data: {
+      email: result.email,
+    },
   });
 });
 

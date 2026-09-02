@@ -12,4 +12,16 @@ export default {
     secret: process.env.JWT_ACCESS_SECRET || 'fallback_secret_key',
     expires_in: process.env.JWT_ACCESS_EXPIRES_IN || '7d',
   },
+  redis: {
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+  },
+  email: {
+    resend_api_key: process.env.RESEND_API_KEY || '',
+    from: process.env.EMAIL_FROM || 'Freelance Platform <onboarding@resend.dev>',
+    smtp_user: process.env.EMAIL_USER || process.env.SMTP_USER || '',
+    smtp_pass: process.env.EMAIL_PASS || process.env.SMTP_PASS || '',
+  },
+  otp: {
+    expires_in_seconds: Number(process.env.OTP_EXPIRATION_SECONDS) || 300, // 5 minutes default
+  },
 };

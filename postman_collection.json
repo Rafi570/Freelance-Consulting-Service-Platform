@@ -10,7 +10,76 @@
       "name": "Auth",
       "item": [
         {
-          "name": "1. Login User",
+          "name": "1. Register (Store in Redis & Send OTP)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hasan Rafi\",\n  \"email\": \"hasan.provider@gmail.com\",\n  \"password\": \"password123\",\n  \"role\": \"PROVIDER\",\n  \"bio\": \"Full Stack & Cloud Specialist\",\n  \"skills\": [\"React\", \"Node.js\", \"PostgreSQL\", \"Redis\"],\n  \"hourlyRate\": 40,\n  \"phone\": \"+8801700000000\",\n  \"address\": \"Dhaka, Bangladesh\",\n  \"experience\": \"3+ years\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "2. Verify Email OTP (Commit to Database)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hasan.provider@gmail.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/auth/verify-email",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "auth", "verify-email"]
+            }
+          }
+        },
+        {
+          "name": "3. Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hasan.provider@gmail.com\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/auth/resend-otp",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "auth", "resend-otp"]
+            }
+          }
+        },
+        {
+          "name": "4. Login User",
           "request": {
             "method": "POST",
             "header": [
