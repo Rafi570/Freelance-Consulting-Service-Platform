@@ -278,6 +278,10 @@ const getSingleProviderFromDB = async (id: string) => {
     throw new AppError(404, 'Provider not found.');
   }
 
+  if (provider.status !== 'ACTIVE') {
+    throw new AppError(404, 'Provider profile is currently unavailable.');
+  }
+
   return provider;
 };
 

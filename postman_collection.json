@@ -226,6 +226,245 @@
       ]
     },
     {
+      "name": "Super Admin - Provider & User Management",
+      "item": [
+        {
+          "name": "1. Super Admin Login (hasanrafi570@gmail.com)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hasanrafi570@gmail.com\",\n  \"password\": \"Rafi570@\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "2. Set Provider Status to DRAFT (PATCH /status)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DRAFT\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/providers/:id/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "providers", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1697635b-c701-4a3f-9671-43d8545c9bb9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Set Provider Status to BLOCKED (PATCH /status)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"BLOCKED\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/providers/:id/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "providers", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1697635b-c701-4a3f-9671-43d8545c9bb9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Set Provider Status to ACTIVE (PATCH /status)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/providers/:id/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "providers", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1697635b-c701-4a3f-9671-43d8545c9bb9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Shortcut: Block Provider (PATCH /block)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/providers/:id/block",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "providers", ":id", "block"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1697635b-c701-4a3f-9671-43d8545c9bb9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Shortcut: Set Provider to DRAFT (PATCH /draft)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/providers/:id/draft",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "providers", ":id", "draft"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1697635b-c701-4a3f-9671-43d8545c9bb9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Shortcut: Activate Provider (PATCH /activate)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/providers/:id/activate",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "providers", ":id", "activate"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1697635b-c701-4a3f-9671-43d8545c9bb9"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Get All Users / Providers with Filters (SUPER_ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/users?role=PROVIDER&status=DRAFT&page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "users"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "PROVIDER"
+                },
+                {
+                  "key": "status",
+                  "value": "DRAFT"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Gigs",
       "item": [
         {

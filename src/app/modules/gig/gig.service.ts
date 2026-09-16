@@ -41,6 +41,13 @@ const createGig = async (providerId: string, payload: ICreateGigPayload) => {
     throw new AppError(403, 'Only registered service providers can create gigs.');
   }
 
+  if (provider.status !== 'ACTIVE') {
+    throw new AppError(
+      403,
+      `Cannot publish gigs when account status is ${provider.status}. Only ACTIVE providers can publish gigs.`
+    );
+  }
+
   // 2. Enforce 4-Gig Limit for Free Providers
   const currentGigCount = await prisma.gig.count({
     where: { providerId },
@@ -120,6 +127,9 @@ const getAllGigs = async (query: Record<string, any>) => {
 
   const whereConditions: any = {
     status: status as any,
+    provider: {
+      status: 'ACTIVE',
+    },
   };
 
   if (searchTerm) {

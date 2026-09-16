@@ -17,6 +17,7 @@ enum UserStatus {
   ACTIVE
   BLOCKED
   SUSPENDED
+  DRAFT
 }
 
 enum PackageTier {

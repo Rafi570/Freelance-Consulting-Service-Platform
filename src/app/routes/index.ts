@@ -4,6 +4,7 @@ import { GigRoutes } from '../modules/gig/gig.routes';
 import { OrderRoutes } from '../modules/order/order.routes';
 import { PaymentRoutes } from '../modules/payment/payment.routes';
 import { ProviderRoutes } from '../modules/provider/provider.routes';
+import { UserRoutes } from '../modules/user/user.routes';
 
 const router = Router();
 
@@ -11,6 +12,14 @@ const moduleRoutes = [
   {
     path: '/auth',
     route: AuthRoutes,
+  },
+  {
+    path: '/users',
+    route: UserRoutes,
+  },
+  {
+    path: '/admin/users',
+    route: UserRoutes,
   },
   {
     path: '/providers',
