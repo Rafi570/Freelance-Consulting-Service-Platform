@@ -184,12 +184,47 @@ const getAllGigs = async (query: Record<string, any>) => {
             profile: true,
           },
         },
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
+        _count: {
+          select: {
+            orders: {
+              where: { status: 'COMPLETED' },
+            },
+            reviews: true,
+          },
+        },
       },
     }),
     prisma.gig.count({
       where: whereConditions,
     }),
   ]);
+
+  const formattedGigs = gigs.map((gig) => {
+    const totalSold = gig._count?.orders ?? 0;
+    const totalReviews = gig.reviews.length;
+    const averageRating =
+      totalReviews > 0
+        ? parseFloat(
+            (
+              gig.reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews
+            ).toFixed(1)
+          )
+        : 0;
+
+    const { reviews, ...restGig } = gig;
+
+    return {
+      ...restGig,
+      totalSold,
+      totalReviews,
+      averageRating,
+    };
+  });
 
   return {
     meta: {
@@ -198,7 +233,7 @@ const getAllGigs = async (query: Record<string, any>) => {
       total,
       totalPage: Math.ceil(total / limitNumber),
     },
-    data: gigs,
+    data: formattedGigs,
   };
 };
 
@@ -219,8 +254,27 @@ const getSingleGig = async (id: string) => {
           profile: true,
         },
       },
+      reviews: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          client: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
       _count: {
-        select: { orders: true },
+        select: {
+          orders: {
+            where: { status: 'COMPLETED' },
+          },
+          reviews: true,
+        },
       },
     },
   });
@@ -229,7 +283,23 @@ const getSingleGig = async (id: string) => {
     throw new AppError(404, 'Gig not found.');
   }
 
-  return gig;
+  const totalSold = gig._count?.orders ?? 0;
+  const totalReviews = gig.reviews.length;
+  const averageRating =
+    totalReviews > 0
+      ? parseFloat(
+          (
+            gig.reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews
+          ).toFixed(1)
+        )
+      : 0;
+
+  return {
+    ...gig,
+    totalSold,
+    totalReviews,
+    averageRating,
+  };
 };
 
 const getMyGigs = async (providerId: string) => {
@@ -242,8 +312,18 @@ const getMyGigs = async (providerId: string) => {
             price: 'asc',
           },
         },
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
         _count: {
-          select: { orders: true },
+          select: {
+            orders: {
+              where: { status: 'COMPLETED' },
+            },
+            reviews: true,
+          },
         },
       },
       orderBy: {
@@ -258,12 +338,34 @@ const getMyGigs = async (providerId: string) => {
 
   const isSubscribed = provider?.profile?.isSubscribed ?? false;
 
+  const formattedGigs = gigs.map((gig) => {
+    const totalSold = gig._count?.orders ?? 0;
+    const totalReviews = gig.reviews.length;
+    const averageRating =
+      totalReviews > 0
+        ? parseFloat(
+            (
+              gig.reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews
+            ).toFixed(1)
+          )
+        : 0;
+
+    const { reviews, ...restGig } = gig;
+
+    return {
+      ...restGig,
+      totalSold,
+      totalReviews,
+      averageRating,
+    };
+  });
+
   return {
     isSubscribed,
     gigLimit: isSubscribed ? 'Unlimited' : 4,
-    totalCreated: gigs.length,
-    remainingFreeGigs: isSubscribed ? 'Unlimited' : Math.max(0, 4 - gigs.length),
-    gigs,
+    totalCreated: formattedGigs.length,
+    remainingFreeGigs: isSubscribed ? 'Unlimited' : Math.max(0, 4 - formattedGigs.length),
+    gigs: formattedGigs,
   };
 };
 

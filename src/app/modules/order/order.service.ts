@@ -179,6 +179,7 @@ const getMyOrders = async (userId: string, role: string) => {
         },
       },
       payment: true,
+      review: true,
     },
   });
 
@@ -209,6 +210,7 @@ const getSingleOrder = async (userId: string, role: string, orderId: string) => 
         },
       },
       payment: true,
+      review: true,
     },
   });
 

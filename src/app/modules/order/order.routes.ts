@@ -3,6 +3,8 @@ import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { OrderController } from './order.controller';
 import { OrderValidation } from './order.validation';
+import { ReviewController } from '../review/review.controller';
+import { ReviewValidation } from '../review/review.validation';
 
 const router = Router();
 
@@ -48,6 +50,21 @@ router.patch(
   auth('CLIENT', 'PROVIDER', 'SUPER_ADMIN'),
   validateRequest(OrderValidation.cancelOrderValidationSchema),
   OrderController.cancelOrder
+);
+
+// Submit rating and comment for a completed order (CLIENT, SUPER_ADMIN)
+router.post(
+  '/:id/review',
+  auth('CLIENT', 'SUPER_ADMIN'),
+  validateRequest(ReviewValidation.createReviewValidationSchema),
+  ReviewController.createReview
+);
+
+// Get review for an order (CLIENT, PROVIDER, SUPER_ADMIN)
+router.get(
+  '/:id/review',
+  auth('CLIENT', 'PROVIDER', 'SUPER_ADMIN'),
+  ReviewController.getOrderReview
 );
 
 export const OrderRoutes = router;

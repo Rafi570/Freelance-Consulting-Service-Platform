@@ -75,6 +75,7 @@ model User {
   profile  ProviderProfile?
   gigs     Gig[]
   orders   Order[]          @relation("ClientOrders")
+  reviews  Review[]         @relation("ClientReviews")
   payments Payment[]
 
   @@map("users")
@@ -111,6 +112,7 @@ model Gig {
 
   packages GigPackage[]
   orders   Order[]
+  reviews  Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -157,6 +159,7 @@ model Order {
   cancelledAt        DateTime?
 
   payment Payment?
+  review  Review?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -182,4 +185,20 @@ model Payment {
   updatedAt DateTime @updatedAt
 
   @@map("payments")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  gigId     String
+  gig       Gig      @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    User     @relation("ClientReviews", fields: [clientId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reviews")
 }

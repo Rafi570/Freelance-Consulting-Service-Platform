@@ -874,6 +874,116 @@
           }
         }
       ]
+    },
+    {
+      "name": "Review & Ratings",
+      "item": [
+        {
+          "name": "1. Submit Review & Rating for Completed Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{CLIENT_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"ORDER_UUID_HERE\",\n  \"rating\": 5,\n  \"comment\": \"Amazing quality work! Highly professional and finished well ahead of schedule. Highly recommended!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/reviews",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "reviews"]
+            }
+          }
+        },
+        {
+          "name": "2. Submit Review on Order URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{CLIENT_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Superb delivery and exceptional communication throughout the process!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/orders/:id/review",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "orders", ":id", "review"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ORDER_UUID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Get All Reviews & Breakdown for a Gig (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/reviews/gig/:gigId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "reviews", "gig", ":gigId"],
+              "variable": [
+                {
+                  "key": "gigId",
+                  "value": "GIG_UUID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Get Review of Specific Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ACCESS_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/reviews/order/:orderId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "reviews", "order", ":orderId"],
+              "variable": [
+                {
+                  "key": "orderId",
+                  "value": "ORDER_UUID_HERE"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }
