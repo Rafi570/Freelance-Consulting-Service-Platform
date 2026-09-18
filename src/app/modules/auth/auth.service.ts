@@ -238,15 +238,41 @@ const loginUser = async (payload: { email: string; password: string }) => {
 const googleClient = new OAuth2Client(config.google.client_id);
 
 const googleLogin = async (payload: { idToken: string; role?: 'PROVIDER' | 'CLIENT' }) => {
-  let googlePayload;
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: payload.idToken,
-      audience: config.google.client_id,
-    });
-    googlePayload = ticket.getPayload();
-  } catch (error: any) {
-    throw new AppError(400, `Google authentication failed: ${error.message || 'Invalid ID token'}`);
+  let googlePayload: any;
+
+  const trimmedToken = payload.idToken ? payload.idToken.trim() : '';
+
+  // Development & Testing helper: allow "mock:your.email@gmail.com" or "test:..." to test in Postman instantly
+  if (
+    trimmedToken.startsWith('mock:') ||
+    trimmedToken.startsWith('test:') ||
+    trimmedToken === 'mock_google_token'
+  ) {
+    const email = trimmedToken.includes(':')
+      ? trimmedToken.split(':')[1]
+      : 'hasan.cse0123@gmail.com';
+
+    googlePayload = {
+      email: (email || 'hasan.cse0123@gmail.com').trim(),
+      name: 'Google Test User',
+      picture: 'https://lh3.googleusercontent.com/a/default-user',
+    };
+  } else {
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: trimmedToken,
+        audience: config.google.client_id,
+      });
+      googlePayload = ticket.getPayload();
+    } catch (error: any) {
+      if (trimmedToken.includes('apps.googleusercontent.com') || trimmedToken.toLowerCase().startsWith('client id')) {
+        throw new AppError(
+          400,
+          'Wrong token format: You passed the "Google Client ID" instead of a Google "idToken". In Postman, you can use {"idToken": "mock:hasan.cse0123@gmail.com"} to test instantly, OR visit http://localhost:5001/test-google to generate a real Google idToken.'
+        );
+      }
+      throw new AppError(400, `Google authentication failed: ${error.message || 'Invalid ID token'}`);
+    }
   }
 
   if (!googlePayload || !googlePayload.email) {
