@@ -11,7 +11,8 @@ interface IAdminUserContext {
 const blockUserIntoDB = async (
   adminUser: IAdminUserContext,
   targetId: string,
-  status: UserStatus = 'BLOCKED'
+  status: UserStatus = 'BLOCKED',
+  reason?: string
 ) => {
   // 1. Strict verification: ensure the requesting user is a SUPER_ADMIN
   if (adminUser.role !== 'SUPER_ADMIN') {
@@ -45,6 +46,8 @@ const blockUserIntoDB = async (
     throw new AppError(400, 'Cannot change the status of another SUPER_ADMIN account.');
   }
 
+  const isBlocking = status === 'BLOCKED' || status === 'SUSPENDED';
+
   // 5. Update user status in database
   const updatedUser = await prisma.user.update({
     where: {
@@ -52,6 +55,8 @@ const blockUserIntoDB = async (
     },
     data: {
       status,
+      blockReason: isBlocking ? (reason || 'Violation of terms and community guidelines') : null,
+      blockedAt: isBlocking ? new Date() : null,
     },
     select: {
       id: true,
@@ -59,6 +64,8 @@ const blockUserIntoDB = async (
       email: true,
       role: true,
       status: true,
+      blockReason: true,
+      blockedAt: true,
       createdAt: true,
       updatedAt: true,
       profile: true,
@@ -85,9 +92,10 @@ const draftUserIntoDB = async (
 const updateUserStatusIntoDB = async (
   adminUser: IAdminUserContext,
   targetId: string,
-  status: UserStatus
+  status: UserStatus,
+  reason?: string
 ) => {
-  return await blockUserIntoDB(adminUser, targetId, status);
+  return await blockUserIntoDB(adminUser, targetId, status, reason);
 };
 
 const getAllUsersFromDB = async (
@@ -135,6 +143,8 @@ const getAllUsersFromDB = async (
         email: true,
         role: true,
         status: true,
+        blockReason: true,
+        blockedAt: true,
         createdAt: true,
         updatedAt: true,
         profile: true,
@@ -177,9 +187,23 @@ const getSingleUserFromDB = async (
       email: true,
       role: true,
       status: true,
+      blockReason: true,
+      blockedAt: true,
       createdAt: true,
       updatedAt: true,
       profile: true,
+      supportTickets: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          messages: {
+            orderBy: {
+              createdAt: 'asc',
+            },
+          },
+        },
+      },
       gigs: {
         select: {
           id: true,
@@ -215,3 +239,4 @@ export const UserService = {
   getAllUsersFromDB,
   getSingleUserFromDB,
 };
+

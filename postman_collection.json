@@ -285,7 +285,7 @@
           }
         },
         {
-          "name": "3. Set Provider Status to BLOCKED (PATCH /status)",
+          "name": "3. Set Provider Status to BLOCKED with Reason (PATCH /status)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -300,7 +300,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"BLOCKED\"\n}"
+              "raw": "{\n  \"status\": \"BLOCKED\",\n  \"reason\": \"Repeated project delivery delays and client complaints\"\n}"
             },
             "url": {
               "raw": "http://localhost:5001/api/v1/providers/:id/status",
@@ -351,15 +351,23 @@
           }
         },
         {
-          "name": "5. Shortcut: Block Provider (PATCH /block)",
+          "name": "5. Shortcut: Block Provider with Reason (PATCH /block)",
           "request": {
             "method": "PATCH",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Suspicious account activity and terms of service breach\"\n}"
+            },
             "url": {
               "raw": "http://localhost:5001/api/v1/providers/:id/block",
               "protocol": "http",
@@ -468,13 +476,13 @@
       "name": "Gigs",
       "item": [
         {
-          "name": "1. Create Gig with 3 Packages (BASIC, STANDARD, PREMIUM)",
+          "name": "1. Create Gig with 3-4 Images & 3 Packages (POST /gigs)",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{ACCESS_TOKEN}}"
+                "value": "Bearer {{PROVIDER_TOKEN}}"
               },
               {
                 "key": "Content-Type",
@@ -483,7 +491,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Full Stack Web Application Development in Next.js & PostgreSQL\",\n  \"description\": \"I will build scalable, high-performance modern web applications using React, Next.js, Node.js, Prisma, and PostgreSQL.\",\n  \"category\": \"Web Development\",\n  \"tags\": [\"Next.js\", \"React\", \"PostgreSQL\", \"Prisma\", \"TailwindCSS\"],\n  \"images\": [\"https://images.unsplash.com/photo-1555066931-4365d14bab8c\"],\n  \"packages\": [\n    {\n      \"tier\": \"BASIC\",\n      \"name\": \"Basic Consultation & Setup\",\n      \"description\": \"1 hour technical consultation, architecture review, and basic project setup boilerplate.\",\n      \"price\": 50,\n      \"deliveryTimeInDays\": 1,\n      \"revisions\": 1,\n      \"features\": [\"1hr Consultation\", \"Tech Stack Recommendation\", \"Boilerplate Setup\"]\n    },\n    {\n      \"tier\": \"STANDARD\",\n      \"name\": \"Standard Feature MVP\",\n      \"description\": \"Full MVP module with authentication, database models, and clean RESTful API integration.\",\n      \"price\": 200,\n      \"deliveryTimeInDays\": 3,\n      \"revisions\": 3,\n      \"features\": [\"Auth & Roles\", \"Database Schema\", \"Up to 5 API Endpoints\", \"Responsive UI\"]\n    },\n    {\n      \"tier\": \"PREMIUM\",\n      \"name\": \"Enterprise Full-Stack Solution\",\n      \"description\": \"Complete production-ready web application with Redis caching, Payment, CI/CD, and deployment.\",\n      \"price\": 500,\n      \"deliveryTimeInDays\": 7,\n      \"revisions\": 5,\n      \"features\": [\"Full Production App\", \"Payment Gateway\", \"Redis Caching\", \"Email System\", \"Free 30-Day Support\"]\n    }\n  ]\n}"
+              "raw": "{\n  \"title\": \"Full Stack Web Application Development in Next.js & PostgreSQL\",\n  \"description\": \"I will build scalable, high-performance modern web applications using React, Next.js, Node.js, Prisma, and PostgreSQL with responsive UI and secure architecture.\",\n  \"category\": \"Web Development\",\n  \"tags\": [\"Next.js\", \"React\", \"PostgreSQL\", \"Prisma\", \"TailwindCSS\"],\n  \"images\": [\n    \"https://res.cloudinary.com/dq296qfag/image/upload/v1720000000/freelance_gigs/gig_cover.jpg\",\n    \"https://res.cloudinary.com/dq296qfag/image/upload/v1720000000/freelance_gigs/gig_preview1.jpg\",\n    \"https://res.cloudinary.com/dq296qfag/image/upload/v1720000000/freelance_gigs/gig_preview2.jpg\",\n    \"https://res.cloudinary.com/dq296qfag/image/upload/v1720000000/freelance_gigs/gig_preview3.jpg\"\n  ],\n  \"packages\": [\n    {\n      \"tier\": \"BASIC\",\n      \"name\": \"Basic Consultation & Setup\",\n      \"description\": \"1 hour technical consultation, architecture review, and basic project setup boilerplate.\",\n      \"price\": 50,\n      \"deliveryTimeInDays\": 1,\n      \"revisions\": 1,\n      \"features\": [\"1hr Consultation\", \"Tech Stack Recommendation\", \"Boilerplate Setup\"]\n    },\n    {\n      \"tier\": \"STANDARD\",\n      \"name\": \"Standard Feature MVP\",\n      \"description\": \"Full MVP module with authentication, database models, and clean RESTful API integration.\",\n      \"price\": 200,\n      \"deliveryTimeInDays\": 3,\n      \"revisions\": 3,\n      \"features\": [\"Auth & Roles\", \"Database Schema\", \"Up to 5 API Endpoints\", \"Responsive UI\"]\n    },\n    {\n      \"tier\": \"PREMIUM\",\n      \"name\": \"Enterprise Full-Stack Solution\",\n      \"description\": \"Complete production-ready web application with Redis caching, Payment, CI/CD, and deployment.\",\n      \"price\": 500,\n      \"deliveryTimeInDays\": 7,\n      \"revisions\": 5,\n      \"features\": [\"Full Production App\", \"Payment Gateway\", \"Redis Caching\", \"Email System\", \"Free 30-Day Support\"]\n    }\n  ]\n}"
             },
             "url": {
               "raw": "http://localhost:5001/api/v1/gigs",
@@ -491,6 +499,50 @@
               "host": ["localhost"],
               "port": "5001",
               "path": ["api", "v1", "gigs"]
+            }
+          }
+        },
+        {
+          "name": "1.1 Upload 1-4 Gig Images to Cloudinary (POST /upload-images)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{PROVIDER_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/gigs/upload-images",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "gigs", "upload-images"]
             }
           }
         },
@@ -978,6 +1030,262 @@
                 {
                   "key": "orderId",
                   "value": "ORDER_UUID_HERE"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provider Support & Block Appeals",
+      "item": [
+        {
+          "name": "1. Check Block Status & Reason by Email (Public / Provider)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hasan.provider@gmail.com\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/support/check-status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "support", "check-status"]
+            }
+          }
+        },
+        {
+          "name": "2. Submit Appeal for Unblocking (Blocked Provider)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hasan.provider@gmail.com\",\n  \"subject\": \"Appeal for Account Unblocking - Issue Resolved\",\n  \"message\": \"Dear Support, I have cleared all pending client revisions, updated my profile, and agreed to abide by platform delivery deadlines. Please review and unblock my provider account.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/support/appeal",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "support", "appeal"]
+            }
+          }
+        },
+        {
+          "name": "3. Provider: View My Support Tickets & History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{PROVIDER_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/support/my-tickets",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "support", "my-tickets"]
+            }
+          }
+        },
+        {
+          "name": "4. Provider: Get Single Ticket with Message Thread",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{PROVIDER_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/support/tickets/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "support", "tickets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "TICKET_UUID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Provider: Send Message in Support Thread",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{PROVIDER_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Thank you for reviewing. Here is the confirmation that my project backlog is cleared.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/support/tickets/:id/messages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "support", "tickets", ":id", "messages"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "TICKET_UUID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Admin: View All Support Tickets & Appeals (Filter by Category/Status)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5001/api/v1/support/admin/tickets?category=BLOCK_APPEAL&status=PENDING",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "support", "admin", "tickets"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "BLOCK_APPEAL"
+                },
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Admin: Send Message / Reply to Provider in Support Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hello, we have reviewed your past delivery logs and verified your commitment.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/support/admin/tickets/:id/messages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "support", "admin", "tickets", ":id", "messages"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "TICKET_UUID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Admin: Approve Appeal & Automatically UNBLOCK Provider Account",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"APPROVE\",\n  \"adminNotes\": \"Valid reason provided. Provider resolved past client complaints and completed required guidelines. Provider unblocked.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/support/admin/tickets/:id/review",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "support", "admin", "tickets", ":id", "review"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "TICKET_UUID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "9. Admin: Reject Appeal (Keep Account Blocked)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{SUPER_ADMIN_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"REJECT\",\n  \"adminNotes\": \"Appeal rejected due to repeated policy breaches and unresolved disputes.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/v1/support/admin/tickets/:id/review",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5001",
+              "path": ["api", "v1", "support", "admin", "tickets", ":id", "review"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "TICKET_UUID_HERE"
                 }
               ]
             }

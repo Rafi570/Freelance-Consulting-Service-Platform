@@ -35,4 +35,9 @@ export default {
       process.env.STRIPE_CANCEL_URL || 'http://localhost:3000/payment/cancel',
     subscription_fee: 15.0, // $15 for provider premium subscription
   },
+  cloudinary: {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dq296qfag',
+    api_key: process.env.CLOUDINARY_API_KEY || '924775887275442',
+    api_secret: process.env.CLOUDINARY_API_SECRET || '0u-ontmI2MvLUS1nYj8ad6xN07k',
+  },
 };

@@ -7,8 +7,9 @@ const blockUser = catchAsync(async (req: Request, res: Response) => {
   const adminUser = (req as any).user;
   const targetId = req.params.id as string;
   const status = req.body?.status || 'BLOCKED';
+  const reason = req.body?.reason;
 
-  const result = await UserService.blockUserIntoDB(adminUser, targetId, status);
+  const result = await UserService.blockUserIntoDB(adminUser, targetId, status, reason);
 
   const actionText =
     status === 'BLOCKED'
@@ -72,9 +73,9 @@ const activateUser = catchAsync(async (req: Request, res: Response) => {
 const updateUserStatus = catchAsync(async (req: Request, res: Response) => {
   const adminUser = (req as any).user;
   const targetId = req.params.id as string;
-  const { status } = req.body;
+  const { status, reason } = req.body;
 
-  const result = await UserService.updateUserStatusIntoDB(adminUser, targetId, status);
+  const result = await UserService.updateUserStatusIntoDB(adminUser, targetId, status, reason);
 
   sendResponse(res, {
     statusCode: 200,

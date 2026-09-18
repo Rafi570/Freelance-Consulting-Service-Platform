@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
+import AppError from '../../errors/AppError';
 import catchAsync from '../../utils/catchAsync';
+import { uploadMultipleImagesToCloudinary } from '../../utils/cloudinary';
 import sendResponse from '../../utils/sendResponse';
 import { GigService } from './gig.service';
 
@@ -90,8 +92,28 @@ const deleteGig = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const uploadGigImages = catchAsync(async (req: Request, res: Response) => {
+  const files = req.files as Express.Multer.File[];
+  if (!files || files.length === 0) {
+    throw new AppError(400, 'Please select 1 to 4 image files to upload.');
+  }
+
+  const uploadedUrls = await uploadMultipleImagesToCloudinary(files, 'freelance_gigs');
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `${uploadedUrls.length} image(s) uploaded to Cloudinary successfully!`,
+    data: {
+      images: uploadedUrls,
+      count: uploadedUrls.length,
+    },
+  });
+});
+
 export const GigController = {
   createGig,
+  uploadGigImages,
   getAllGigs,
   getSingleGig,
   getMyGigs,

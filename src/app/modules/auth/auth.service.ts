@@ -203,7 +203,11 @@ const loginUser = async (payload: { email: string; password: string }) => {
   }
 
   if (user.status === 'BLOCKED' || user.status === 'SUSPENDED') {
-    throw new AppError(403, `User account is ${user.status.toLowerCase()}.`);
+    const reasonText = user.blockReason ? ` Reason: "${user.blockReason}".` : '';
+    throw new AppError(
+      403,
+      `Your account is ${user.status.toLowerCase()}.${reasonText} You can submit an appeal to support to request unblocking.`
+    );
   }
 
   const isPasswordMatched = await bcrypt.compare(payload.password, user.password);

@@ -16,7 +16,11 @@ const createGigValidationSchema = z.object({
     description: z.string().min(20, 'Gig description must be at least 20 characters'),
     category: z.string().min(2, 'Category is required'),
     tags: z.array(z.string()).optional().default([]),
-    images: z.array(z.string().url('Invalid image URL format')).optional().default([]),
+    images: z
+      .array(z.string().url('Invalid image URL format'))
+      .max(6, 'You can upload up to 6 images (3-4 images recommended)')
+      .optional()
+      .default([]),
     packages: z
       .array(packageSchema)
       .length(3, 'Every gig must have exactly 3 packages (BASIC, STANDARD, PREMIUM)')
@@ -42,7 +46,7 @@ const updateGigValidationSchema = z.object({
     description: z.string().min(20).optional(),
     category: z.string().min(2).optional(),
     tags: z.array(z.string()).optional(),
-    images: z.array(z.string().url()).optional(),
+    images: z.array(z.string().url('Invalid image URL format')).max(6, 'Maximum 6 images allowed').optional(),
     status: z.enum(['ACTIVE', 'PAUSED', 'DRAFT']).optional(),
     packages: z.array(packageSchema).optional(),
   }),

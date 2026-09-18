@@ -1,41 +1,79 @@
-import { Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
+import AppError from '../../errors/AppError';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
+import catchAsync from '../../utils/catchAsync';
+import { upload, uploadMultipleImagesToCloudinary } from '../../utils/cloudinary';
 import { GigController } from './gig.controller';
 import { GigValidation } from './gig.validation';
 
 const router = Router();
 
-// Create Gig with 3 packages (PROVIDER only)
+// Middleware to parse form data JSON and upload image files to Cloudinary
+const parseFormDataAndUpload = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    if (typeof req.body?.data === 'string') {
+      try {
+        req.body = JSON.parse(req.body.data);
+      } catch {
+        throw new AppError(400, 'Invalid JSON format in "data" field.');
+      }
+    }
+
+    const files = req.files as Express.Multer.File[];
+    if (files && files.length > 0) {
+      const uploadedUrls = await uploadMultipleImagesToCloudinary(files, 'freelance_gigs');
+      const existingImages = Array.isArray(req.body?.images) ? req.body.images : [];
+      req.body.images = [...existingImages, ...uploadedUrls];
+    }
+
+    next();
+  }
+);
+
+// 1. Standalone Upload 1-4 Gig Images to Cloudinary (PROVIDER only)
+router.post(
+  '/upload-images',
+  auth('PROVIDER'),
+  upload.array('images', 6),
+  GigController.uploadGigImages
+);
+
+// 2. Create Gig with 3 packages and 3-4 images (PROVIDER only)
+// Supports both JSON body and Multipart form-data with image files
 router.post(
   '/',
   auth('PROVIDER'),
+  upload.array('images', 6),
+  parseFormDataAndUpload,
   validateRequest(GigValidation.createGigValidationSchema),
   GigController.createGig
 );
 
-// Get logged in provider's own gigs
+// 3. Get logged in provider's own gigs
 router.get(
   '/my-gigs',
   auth('PROVIDER', 'SUPER_ADMIN'),
   GigController.getMyGigs
 );
 
-// Public: Get all gigs with search & filtering
+// 4. Public: Get all gigs with search & filtering
 router.get('/', GigController.getAllGigs);
 
-// Public: Get single gig with full packages
+// 5. Public: Get single gig with full packages
 router.get('/:id', GigController.getSingleGig);
 
-// Update gig and packages (PROVIDER only)
+// 6. Update gig, images and packages (PROVIDER only)
 router.patch(
   '/:id',
   auth('PROVIDER', 'SUPER_ADMIN'),
+  upload.array('images', 6),
+  parseFormDataAndUpload,
   validateRequest(GigValidation.updateGigValidationSchema),
   GigController.updateGig
 );
 
-// Toggle/Disable/Enable gig status (PROVIDER only)
+// 7. Toggle/Disable/Enable gig status (PROVIDER only)
 router.patch(
   '/:id/toggle-status',
   auth('PROVIDER'),
@@ -43,7 +81,7 @@ router.patch(
   GigController.toggleGigStatus
 );
 
-// Delete gig (PROVIDER owner or SUPER_ADMIN)
+// 8. Delete gig (PROVIDER owner or SUPER_ADMIN)
 router.delete(
   '/:id',
   auth('PROVIDER', 'SUPER_ADMIN'),
