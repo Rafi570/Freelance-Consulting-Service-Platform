@@ -110,6 +110,7 @@ app.get('/test-google', (req: Request, res: Response) => {
       const statusMsg = document.getElementById('status-msg');
       const resultBox = document.getElementById('result');
       const tokenBox = document.getElementById('token-box');
+      const googleToken = response.credential;
 
       statusMsg.style.display = 'block';
       statusMsg.innerText = 'Verifying Google ID Token with backend (/api/v1/auth/google-login)...';
@@ -119,7 +120,7 @@ app.get('/test-google', (req: Request, res: Response) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            idToken: response.credential,
+            idToken: googleToken,
             role: selectedRole,
           }),
         });
@@ -130,13 +131,19 @@ app.get('/test-google', (req: Request, res: Response) => {
         resultBox.style.display = 'block';
         resultBox.innerText = JSON.stringify(data, null, 2);
 
-        if (data.success && data.data?.accessToken) {
-          tokenBox.style.display = 'block';
-          tokenBox.innerHTML = '<strong>JWT Access Token:</strong><br/>' + data.data.accessToken +
-            '<div class="actions">' +
-            '<button class="action-btn" onclick="navigator.clipboard.writeText(\\'' + data.data.accessToken + '\\'); alert(\\'Access Token Copied!\\');">📋 Copy Token</button>' +
-            '</div>';
-        }
+        tokenBox.style.display = 'block';
+        tokenBox.innerHTML =
+          '<div style="margin-bottom:8px;"><strong>1. Google ID Token (Credential):</strong></div>' +
+          '<div style="background:#0f172a; padding:8px; border-radius:4px; font-size:10px; max-height:80px; overflow-y:auto; word-break:break-all; margin-bottom:8px;">' + googleToken + '</div>' +
+          '<div class="actions" style="margin-bottom:12px;">' +
+          '<button class="action-btn" onclick="navigator.clipboard.writeText(\\'' + googleToken + '\\'); alert(\\'Google ID Token Copied! Paste this in Postman idToken field.\\');">📋 Copy Google idToken for Postman</button>' +
+          '</div>' +
+          (data.success && data.data?.accessToken ?
+          '<div style="margin-bottom:8px;"><strong>2. Platform JWT Access Token:</strong></div>' +
+          '<div style="background:#0f172a; padding:8px; border-radius:4px; font-size:10px; max-height:80px; overflow-y:auto; word-break:break-all; margin-bottom:8px;">' + data.data.accessToken + '</div>' +
+          '<div class="actions">' +
+          '<button class="action-btn" style="background:#10b981;" onclick="navigator.clipboard.writeText(\\'' + data.data.accessToken + '\\'); alert(\\'Platform Access Token Copied!\\');">📋 Copy Platform JWT Token</button>' +
+          '</div>' : '');
       } catch (err) {
         statusMsg.innerText = 'Error: ' + err.message;
       }
