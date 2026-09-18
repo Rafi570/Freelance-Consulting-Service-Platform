@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import config from '../../config';
 import AppError from '../../errors/AppError';
@@ -234,9 +235,102 @@ const loginUser = async (payload: { email: string; password: string }) => {
   };
 };
 
+const googleClient = new OAuth2Client(config.google.client_id);
+
+const googleLogin = async (payload: { idToken: string; role?: 'PROVIDER' | 'CLIENT' }) => {
+  let googlePayload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: payload.idToken,
+      audience: config.google.client_id,
+    });
+    googlePayload = ticket.getPayload();
+  } catch (error: any) {
+    throw new AppError(400, `Google authentication failed: ${error.message || 'Invalid ID token'}`);
+  }
+
+  if (!googlePayload || !googlePayload.email) {
+    throw new AppError(400, 'Unable to retrieve verified email from Google account.');
+  }
+
+  const normalizedEmail = googlePayload.email.toLowerCase().trim();
+
+  // 1. Check if user already exists
+  let user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    include: { profile: true },
+  });
+
+  if (user) {
+    if (user.status === 'BLOCKED' || user.status === 'SUSPENDED') {
+      const reasonText = user.blockReason ? ` Reason: "${user.blockReason}".` : '';
+      throw new AppError(
+        403,
+        `Your account is ${user.status.toLowerCase()}.${reasonText} You can submit an appeal to support to request unblocking.`
+      );
+    }
+  } else {
+    // 2. Create new user automatically (verified via Google)
+    const randomPassword = await bcrypt.hash(
+      Math.random().toString(36) + Date.now().toString(),
+      Number(config.bcrypt_salt_rounds)
+    );
+
+    const userRole = payload.role || 'PROVIDER';
+
+    user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          name: googlePayload!.name || 'Google User',
+          email: normalizedEmail,
+          password: randomPassword,
+          role: userRole,
+          status: 'ACTIVE',
+        },
+      });
+
+      let profile = null;
+      if (userRole === 'PROVIDER') {
+        profile = await tx.providerProfile.create({
+          data: {
+            userId: newUser.id,
+            bio: 'Registered via Google OAuth',
+            skills: [],
+          },
+        });
+      }
+
+      return {
+        ...newUser,
+        profile,
+      };
+    });
+  }
+
+  // 3. Generate JWT access token
+  const jwtPayload = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const accessToken = jwt.sign(jwtPayload, config.jwt.secret as string, {
+    expiresIn: config.jwt.expires_in,
+  } as jwt.SignOptions);
+
+  const { password, ...userWithoutPassword } = user;
+
+  return {
+    accessToken,
+    user: userWithoutPassword,
+  };
+};
+
 export const AuthService = {
   registerUser,
   verifyEmail,
   resendOtp,
   loginUser,
+  googleLogin,
 };
+

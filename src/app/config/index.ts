@@ -40,4 +40,9 @@ export default {
     api_key: process.env.CLOUDINARY_API_KEY || '924775887275442',
     api_secret: process.env.CLOUDINARY_API_SECRET || '0u-ontmI2MvLUS1nYj8ad6xN07k',
   },
+  google: {
+    client_id:
+      process.env.GOOGLE_CLIENT_ID ||
+      '1029695050935-1f0tk8ulr5dq396kf4ll5c36e8ud7k3s.apps.googleusercontent.com',
+  },
 };

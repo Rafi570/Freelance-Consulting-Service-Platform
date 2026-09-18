@@ -33,4 +33,12 @@ router.post(
   AuthController.loginUser
 );
 
+// Google OAuth Login / Register
+router.post(
+  '/google-login',
+  validateRequest(AuthValidation.googleLoginValidationSchema),
+  AuthController.googleLogin
+);
+
 export const AuthRoutes = router;
+

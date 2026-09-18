@@ -36,9 +36,18 @@ const resendOtpValidationSchema = z.object({
   }),
 });
 
+const googleLoginValidationSchema = z.object({
+  body: z.object({
+    idToken: z.string().min(1, 'Google ID token or credential is required'),
+    role: z.enum(['PROVIDER', 'CLIENT']).optional().default('PROVIDER'),
+  }),
+});
+
 export const AuthValidation = {
   loginValidationSchema,
   registerValidationSchema,
   verifyEmailValidationSchema,
   resendOtpValidationSchema,
+  googleLoginValidationSchema,
 };
+

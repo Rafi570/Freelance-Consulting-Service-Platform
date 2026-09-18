@@ -51,9 +51,22 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const googleLogin = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthService.googleLogin(req.body);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Google login successful!',
+    data: result,
+  });
+});
+
 export const AuthController = {
   registerUser,
   verifyEmail,
   resendOtp,
   loginUser,
+  googleLogin,
 };
+
