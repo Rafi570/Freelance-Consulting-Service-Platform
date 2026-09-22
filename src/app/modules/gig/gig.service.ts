@@ -512,12 +512,69 @@ const toggleGigStatus = async (
   };
 };
 
+const getGigCategories = async () => {
+  // 1. Fetch distinct active categories from the database
+  const dbGigs = await prisma.gig.findMany({
+    where: {
+      status: 'ACTIVE',
+    },
+    select: {
+      category: true,
+    },
+    distinct: ['category'],
+  });
+
+  const dbCategories = dbGigs
+    .map((g) => g.category?.trim())
+    .filter((cat): cat is string => Boolean(cat));
+
+  // 2. Comprehensive marketplace default categories for full coverage
+  const defaultCategories = [
+    'Graphics & Design',
+    'Programming & Tech',
+    'Digital Marketing',
+    'Video & Animation',
+    'Writing & Translation',
+    'Business & Consulting',
+    'AI Services',
+    'Finance & Accounting',
+  ];
+
+  // 3. Deduplicate preserving active DB categories first
+  const categorySet = new Set<string>();
+  dbCategories.forEach((c) => categorySet.add(c));
+  defaultCategories.forEach((c) => categorySet.add(c));
+
+  // 4. Count active gigs per category
+  const categoryCounts = await prisma.gig.groupBy({
+    by: ['category'],
+    where: {
+      status: 'ACTIVE',
+    },
+    _count: {
+      id: true,
+    },
+  });
+
+  const countMap = new Map<string, number>();
+  categoryCounts.forEach((item) => {
+    countMap.set(item.category, item._count.id);
+  });
+
+  return Array.from(categorySet).map((name) => ({
+    name,
+    count: countMap.get(name) || 0,
+  }));
+};
+
 export const GigService = {
   createGig,
   getAllGigs,
   getSingleGig,
+  getGigCategories,
   getMyGigs,
   updateGig,
   toggleGigStatus,
   deleteGig,
 };
+

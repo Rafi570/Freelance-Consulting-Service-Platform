@@ -28,6 +28,17 @@ const getAllGigs = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getGigCategories = catchAsync(async (req: Request, res: Response) => {
+  const result = await GigService.getGigCategories();
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Gig categories retrieved successfully!',
+    data: result,
+  });
+});
+
 const getSingleGig = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id as string;
   const result = await GigService.getSingleGig(id);
@@ -115,6 +126,7 @@ export const GigController = {
   createGig,
   uploadGigImages,
   getAllGigs,
+  getGigCategories,
   getSingleGig,
   getMyGigs,
   updateGig,

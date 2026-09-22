@@ -60,6 +60,9 @@ router.get(
 // 4. Public: Get all gigs with search & filtering
 router.get('/', GigController.getAllGigs);
 
+// 4b. Public: Get distinct gig categories
+router.get('/categories', GigController.getGigCategories);
+
 // 5. Public: Get single gig with full packages
 router.get('/:id', GigController.getSingleGig);
 
