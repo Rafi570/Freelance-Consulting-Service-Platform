@@ -162,14 +162,35 @@ const getAllGigs = async (query: Record<string, any>) => {
     };
   }
 
+  let orderByClause: any = { createdAt: 'desc' };
+  if (
+    sortBy === 'orders' ||
+    sortBy === 'totalSold' ||
+    sortBy === 'popular' ||
+    sortBy === 'most_ordered'
+  ) {
+    orderByClause = {
+      orders: {
+        _count: sortOrder === 'asc' ? 'asc' : 'desc',
+      },
+    };
+  } else if (
+    sortBy === 'title' ||
+    sortBy === 'category' ||
+    sortBy === 'createdAt' ||
+    sortBy === 'updatedAt'
+  ) {
+    orderByClause = {
+      [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc',
+    };
+  }
+
   const [gigs, total] = await Promise.all([
     prisma.gig.findMany({
       where: whereConditions,
       skip,
       take: limitNumber,
-      orderBy: {
-        [sortBy as string]: sortOrder === 'asc' ? 'asc' : 'desc',
-      },
+      orderBy: orderByClause,
       include: {
         packages: {
           orderBy: {
@@ -192,7 +213,11 @@ const getAllGigs = async (query: Record<string, any>) => {
         _count: {
           select: {
             orders: {
-              where: { status: 'COMPLETED' },
+              where: {
+                status: {
+                  in: ['COMPLETED', 'IN_PROGRESS', 'PENDING'],
+                },
+              },
             },
             reviews: true,
           },
@@ -204,7 +229,7 @@ const getAllGigs = async (query: Record<string, any>) => {
     }),
   ]);
 
-  const formattedGigs = gigs.map((gig) => {
+  let formattedGigs = gigs.map((gig) => {
     const totalSold = gig._count?.orders ?? 0;
     const totalReviews = gig.reviews.length;
     const averageRating =
@@ -225,6 +250,34 @@ const getAllGigs = async (query: Record<string, any>) => {
       averageRating,
     };
   });
+
+  // Post-query fallback sorting to guarantee order-count and price sorting precision
+  if (
+    sortBy === 'orders' ||
+    sortBy === 'totalSold' ||
+    sortBy === 'popular' ||
+    sortBy === 'most_ordered'
+  ) {
+    formattedGigs.sort((a, b) =>
+      sortOrder === 'asc' ? a.totalSold - b.totalSold : b.totalSold - a.totalSold
+    );
+  } else if (sortBy === 'rating') {
+    formattedGigs.sort((a, b) =>
+      sortOrder === 'asc' ? a.averageRating - b.averageRating : b.averageRating - a.averageRating
+    );
+  } else if (sortBy === 'price_asc') {
+    formattedGigs.sort((a, b) => {
+      const minA = a.packages?.[0]?.price ?? 0;
+      const minB = b.packages?.[0]?.price ?? 0;
+      return minA - minB;
+    });
+  } else if (sortBy === 'price_desc') {
+    formattedGigs.sort((a, b) => {
+      const minA = a.packages?.[0]?.price ?? 0;
+      const minB = b.packages?.[0]?.price ?? 0;
+      return minB - minA;
+    });
+  }
 
   return {
     meta: {

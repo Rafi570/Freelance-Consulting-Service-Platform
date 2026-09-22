@@ -377,6 +377,68 @@ async function main() {
     }
   }
 
+  // 5. Seed Realistic Orders & Reviews for each gig so Order-based sorting works live
+  const orderTargetMap: Record<string, number> = {
+    'Web Development': 48,
+    'Graphics & Design': 36,
+    'Digital Marketing': 27,
+    'AI Services': 21,
+    'Video & Animation': 14,
+    'Business & Consulting': 8,
+    'Writing & Translation': 5,
+  };
+
+  const allGigs = await prisma.gig.findMany({
+    include: { packages: true },
+  });
+
+  if (client) {
+    for (const gig of allGigs) {
+      const existingOrderCount = await prisma.order.count({
+        where: { gigId: gig.id },
+      });
+      const targetCount = orderTargetMap[gig.category] || 6;
+      const countNeeded = targetCount - existingOrderCount;
+
+      if (countNeeded > 0) {
+        const pkg = gig.packages[0];
+        if (pkg) {
+          for (let i = 0; i < countNeeded; i++) {
+            const order = await prisma.order.create({
+              data: {
+                clientId: client.id,
+                gigId: gig.id,
+                packageId: pkg.id,
+                price: pkg.price,
+                status: 'COMPLETED',
+                paymentStatus: 'PAID',
+              },
+            });
+
+            // Add verified review for the first order
+            if (i === 0) {
+              const existingReview = await prisma.review.findUnique({
+                where: { orderId: order.id },
+              });
+              if (!existingReview) {
+                await prisma.review.create({
+                  data: {
+                    orderId: order.id,
+                    gigId: gig.id,
+                    clientId: client.id,
+                    rating: 5,
+                    comment: 'Exceptional consultation and top-tier deliverable. Highly recommended!',
+                  },
+                });
+              }
+            }
+          }
+          console.log(`📦 Seeded ${countNeeded} orders for "${gig.title.substring(0, 30)}..." (${targetCount} total)`);
+        }
+      }
+    }
+  }
+
   console.log('\n--- Seed Summary ---');
   console.log('👑 Super Admin: hasanrafi570@gmail.com / Rafi570@');
   console.log('👑 Super Admin: superadmin@platform.com / password123');
