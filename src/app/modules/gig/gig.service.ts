@@ -107,7 +107,24 @@ const createGig = async (providerId: string, payload: ICreateGigPayload) => {
   return result;
 };
 
+// High-performance in-memory cache
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+const gigsCache = new Map<string, CacheEntry<any>>();
+
+export const clearGigsCache = () => {
+  gigsCache.clear();
+};
+
 const getAllGigs = async (query: Record<string, any>) => {
+  const cacheKey = `gigs:${JSON.stringify(query)}`;
+  const cached = gigsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data;
+  }
+
   const {
     searchTerm,
     category,
@@ -279,7 +296,7 @@ const getAllGigs = async (query: Record<string, any>) => {
     });
   }
 
-  return {
+  const responseData = {
     meta: {
       page: pageNumber,
       limit: limitNumber,
@@ -288,6 +305,13 @@ const getAllGigs = async (query: Record<string, any>) => {
     },
     data: formattedGigs,
   };
+
+  gigsCache.set(cacheKey, {
+    data: responseData,
+    expiresAt: Date.now() + 60 * 1000,
+  });
+
+  return responseData;
 };
 
 const getSingleGig = async (id: string) => {
@@ -566,6 +590,12 @@ const toggleGigStatus = async (
 };
 
 const getGigCategories = async () => {
+  const cacheKey = 'gigs:categories';
+  const cached = gigsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data;
+  }
+
   // 1. Fetch distinct active categories from the database
   const dbGigs = await prisma.gig.findMany({
     where: {
@@ -614,10 +644,17 @@ const getGigCategories = async () => {
     countMap.set(item.category, item._count.id);
   });
 
-  return Array.from(categorySet).map((name) => ({
+  const categoriesResult = Array.from(categorySet).map((name) => ({
     name,
     count: countMap.get(name) || 0,
   }));
+
+  gigsCache.set(cacheKey, {
+    data: categoriesResult,
+    expiresAt: Date.now() + 300 * 1000, // 5 min cache
+  });
+
+  return categoriesResult;
 };
 
 export const GigService = {
