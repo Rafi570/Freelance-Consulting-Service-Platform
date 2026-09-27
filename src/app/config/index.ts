@@ -18,6 +18,8 @@ export default {
   email: {
     resend_api_key: process.env.RESEND_API_KEY || '',
     from: process.env.EMAIL_FROM || 'Freelance Platform <onboarding@resend.dev>',
+    smtp_host: process.env.SMTP_HOST || '',
+    smtp_port: process.env.SMTP_PORT || '587',
     smtp_user: process.env.EMAIL_USER || process.env.SMTP_USER || '',
     smtp_pass: process.env.EMAIL_PASS || process.env.SMTP_PASS || '',
   },

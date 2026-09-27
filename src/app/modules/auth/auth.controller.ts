@@ -12,6 +12,7 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
     message: result.message,
     data: {
       email: result.email,
+      otp: result.otp,
     },
   });
 });
@@ -36,6 +37,7 @@ const resendOtp = catchAsync(async (req: Request, res: Response) => {
     message: result.message,
     data: {
       email: result.email,
+      otp: result.otp,
     },
   });
 });

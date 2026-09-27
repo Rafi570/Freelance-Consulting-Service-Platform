@@ -45,28 +45,38 @@ export const sendVerificationEmail = async ({
   console.log(`🔑 OTP Code: ${otp} (Expires in ${expireMinutes} mins)`);
   console.log(`==================================================\n`);
 
-  // 1. Try sending via Nodemailer (Gmail SMTP) if EMAIL_USER and EMAIL_PASS are configured
+  // 1. Try sending via Nodemailer (Gmail or custom SMTP) if EMAIL_USER and EMAIL_PASS are configured
   if (config.email.smtp_user && config.email.smtp_pass) {
     try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: config.email.smtp_user,
-          pass: config.email.smtp_pass,
-        },
-      });
+      const transporter = config.email.smtp_host
+        ? nodemailer.createTransport({
+            host: config.email.smtp_host,
+            port: Number(config.email.smtp_port) || 587,
+            secure: Number(config.email.smtp_port) === 465,
+            auth: {
+              user: config.email.smtp_user,
+              pass: config.email.smtp_pass,
+            },
+          })
+        : nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: config.email.smtp_user,
+              pass: config.email.smtp_pass,
+            },
+          });
 
       const info = await transporter.sendMail({
-        from: `"Freelance Platform" <${config.email.smtp_user}>`,
+        from: `"ConsulSphere" <${config.email.smtp_user}>`,
         to,
-        subject: 'Verify Your Email Address - Freelance & Consulting Platform',
+        subject: 'Verify Your Email Address - ConsulSphere',
         html,
       });
 
-      console.log('✅ Email delivered via Gmail SMTP to:', to, info.messageId);
-      return { success: true, provider: 'smtp', messageId: info.messageId };
+      console.log('✅ Email delivered via SMTP to:', to, info.messageId);
+      return { success: true, provider: 'smtp', messageId: info.messageId, otp };
     } catch (smtpError: any) {
-      console.error('❌ Gmail SMTP sending error:', smtpError.message);
+      console.error('❌ SMTP sending error:', smtpError.message);
     }
   }
 

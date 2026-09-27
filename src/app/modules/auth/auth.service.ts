@@ -66,6 +66,7 @@ const registerUser = async (payload: IRegisterUserPayload) => {
 
   return {
     email: normalizedEmail,
+    otp,
     message: `Verification OTP has been sent to ${normalizedEmail}. Please verify your email within ${Math.ceil(
       ttlSeconds / 60
     )} minutes to complete registration.`,
@@ -184,6 +185,7 @@ const resendOtp = async (payload: { email: string }) => {
 
   return {
     email: normalizedEmail,
+    otp: newOtp,
     message: `A new verification OTP has been sent to ${normalizedEmail}.`,
   };
 };
