@@ -63,6 +63,12 @@ router.get('/', GigController.getAllGigs);
 // 4b. Public: Get distinct gig categories
 router.get('/categories', GigController.getGigCategories);
 
+// 4c. Public: Get dynamic search suggestions based on query
+router.get('/suggestions', GigController.getSearchSuggestions);
+
+// 4d. Public: Get dynamic hero data (categories, popular tags, platform metrics)
+router.get('/hero-data', GigController.getHeroData);
+
 // 5. Public: Get single gig with full packages
 router.get('/:id', GigController.getSingleGig);
 

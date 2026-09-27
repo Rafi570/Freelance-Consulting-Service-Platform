@@ -657,14 +657,216 @@ const getGigCategories = async () => {
   return categoriesResult;
 };
 
+const getSearchSuggestions = async (searchTerm?: string) => {
+  const query = (searchTerm || '').trim();
+
+  if (query.length > 0) {
+    const matchingGigs = await prisma.gig.findMany({
+      where: {
+        status: 'ACTIVE',
+        OR: [
+          { title: { contains: query, mode: 'insensitive' } },
+          { category: { contains: query, mode: 'insensitive' } },
+          { tags: { has: query } },
+        ],
+      },
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        tags: true,
+      },
+      take: 10,
+    });
+
+    const suggestions: Array<{
+      text: string;
+      category: string;
+      type: 'service' | 'category' | 'tag';
+      id?: string;
+    }> = [];
+
+    const seenTexts = new Set<string>();
+
+    // 1. Add matching categories
+    matchingGigs.forEach((gig) => {
+      if (
+        gig.category &&
+        gig.category.toLowerCase().includes(query.toLowerCase()) &&
+        !seenTexts.has(gig.category.toLowerCase())
+      ) {
+        seenTexts.add(gig.category.toLowerCase());
+        suggestions.push({
+          text: gig.category,
+          category: gig.category,
+          type: 'category',
+        });
+      }
+    });
+
+    // 2. Add matching tags
+    matchingGigs.forEach((gig) => {
+      if (Array.isArray(gig.tags)) {
+        gig.tags.forEach((tag) => {
+          if (
+            tag.toLowerCase().includes(query.toLowerCase()) &&
+            !seenTexts.has(tag.toLowerCase())
+          ) {
+            seenTexts.add(tag.toLowerCase());
+            suggestions.push({
+              text: tag,
+              category: gig.category,
+              type: 'tag',
+            });
+          }
+        });
+      }
+    });
+
+    // 3. Add matching gig titles
+    matchingGigs.forEach((gig) => {
+      if (!seenTexts.has(gig.title.toLowerCase())) {
+        seenTexts.add(gig.title.toLowerCase());
+        suggestions.push({
+          text: gig.title,
+          category: gig.category,
+          type: 'service',
+          id: gig.id,
+        });
+      }
+    });
+
+    return suggestions.slice(0, 8);
+  }
+
+  // If query is empty, return popular tags, popular categories and featured gigs
+  const popularGigs = await prisma.gig.findMany({
+    where: { status: 'ACTIVE' },
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      tags: true,
+    },
+    take: 12,
+  });
+
+  const popularTagsSet = new Set<string>();
+  const popularCategoriesSet = new Set<string>();
+
+  popularGigs.forEach((g) => {
+    if (g.category) popularCategoriesSet.add(g.category);
+    if (Array.isArray(g.tags)) {
+      g.tags.forEach((t) => popularTagsSet.add(t));
+    }
+  });
+
+  // Supply fallback tags if tags array is sparse
+  const fallbackTags = [
+    'Website Design',
+    'Logo Design',
+    'Web Development',
+    'AI Services',
+    'Digital Marketing',
+    'Business Strategy',
+  ];
+  fallbackTags.forEach((t) => popularTagsSet.add(t));
+
+  return {
+    popularSearches: Array.from(popularTagsSet).slice(0, 6),
+    popularCategories: Array.from(popularCategoriesSet).slice(0, 6),
+    featuredGigs: popularGigs.slice(0, 4).map((g) => ({
+      id: g.id,
+      text: g.title,
+      category: g.category,
+      type: 'service' as const,
+    })),
+  };
+};
+
+const getHeroData = async () => {
+  const cacheKey = 'gigs:hero-data';
+  const cached = gigsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data;
+  }
+
+  // 1. Fetch categories
+  const categories = await getGigCategories();
+
+  // 2. Fetch distinct active tags from database
+  const activeGigs = await prisma.gig.findMany({
+    where: { status: 'ACTIVE' },
+    select: {
+      tags: true,
+      category: true,
+      title: true,
+    },
+    take: 30,
+  });
+
+  const allTags = new Set<string>();
+  activeGigs.forEach((g) => {
+    if (Array.isArray(g.tags)) {
+      g.tags.forEach((tag) => {
+        if (tag && tag.trim()) allTags.add(tag.trim());
+      });
+    }
+  });
+
+  // Default fallbacks if database tags are few
+  const defaultPopularTags = [
+    'Website Design',
+    'Logo & Branding',
+    'SEO & Marketing',
+    'Web & App Dev',
+    'AI Services',
+    'Business Strategy',
+    'Video Editing',
+  ];
+  defaultPopularTags.forEach((t) => allTags.add(t));
+
+  const popularTags = Array.from(allTags).slice(0, 6).map((tag) => ({
+    label: tag,
+    query: tag,
+  }));
+
+  // 3. Platform stats for hero
+  const [totalTalent, totalActiveGigs, totalCompletedOrders] = await Promise.all([
+    prisma.user.count({ where: { role: 'PROVIDER', status: 'ACTIVE' } }),
+    prisma.gig.count({ where: { status: 'ACTIVE' } }),
+    prisma.order.count({ where: { status: 'COMPLETED' } }),
+  ]);
+
+  const heroData = {
+    popularTags,
+    categories: categories.slice(0, 8),
+    stats: {
+      totalTalent: Math.max(totalTalent, 12),
+      totalGigs: Math.max(totalActiveGigs, 8),
+      completedOrders: Math.max(totalCompletedOrders, 158),
+    },
+  };
+
+  gigsCache.set(cacheKey, {
+    data: heroData,
+    expiresAt: Date.now() + 60 * 1000, // 1 min cache
+  });
+
+  return heroData;
+};
+
 export const GigService = {
   createGig,
   getAllGigs,
   getSingleGig,
   getGigCategories,
+  getSearchSuggestions,
+  getHeroData,
   getMyGigs,
   updateGig,
   toggleGigStatus,
   deleteGig,
 };
+
 

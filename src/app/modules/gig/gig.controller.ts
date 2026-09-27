@@ -39,6 +39,19 @@ const getGigCategories = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getSearchSuggestions = catchAsync(async (req: Request, res: Response) => {
+  const query = (req.query.q || req.query.searchTerm || '') as string;
+  const result = await GigService.getSearchSuggestions(query);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Search suggestions retrieved successfully!',
+    data: result,
+  });
+});
+
+
 const getSingleGig = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id as string;
   const result = await GigService.getSingleGig(id);
@@ -122,11 +135,24 @@ const uploadGigImages = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getHeroData = catchAsync(async (req: Request, res: Response) => {
+  const result = await GigService.getHeroData();
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Hero data retrieved successfully!',
+    data: result,
+  });
+});
+
 export const GigController = {
   createGig,
   uploadGigImages,
   getAllGigs,
   getGigCategories,
+  getSearchSuggestions,
+  getHeroData,
   getSingleGig,
   getMyGigs,
   updateGig,
