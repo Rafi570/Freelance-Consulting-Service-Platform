@@ -66,7 +66,7 @@ const getSingleGig = catchAsync(async (req: Request, res: Response) => {
 
 const getMyGigs = catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const result = await GigService.getMyGigs(user.id);
+  const result = await GigService.getMyGigs(user.id, user.role);
 
   sendResponse(res, {
     statusCode: 200,
@@ -79,7 +79,7 @@ const getMyGigs = catchAsync(async (req: Request, res: Response) => {
 const updateGig = catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
   const id = req.params.id as string;
-  const result = await GigService.updateGig(user.id, id, req.body);
+  const result = await GigService.updateGig(user.id, user.role, id, req.body);
 
   sendResponse(res, {
     statusCode: 200,
@@ -93,7 +93,7 @@ const toggleGigStatus = catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
   const id = req.params.id as string;
   const { status } = req.body || {};
-  const result = await GigService.toggleGigStatus(user.id, id, status);
+  const result = await GigService.toggleGigStatus(user.id, user.role, id, status);
 
   sendResponse(res, {
     statusCode: 200,

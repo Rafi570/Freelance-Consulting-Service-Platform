@@ -254,3 +254,18 @@ model SupportMessage {
   @@map("support_messages")
 }
 
+model GigFilter {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  label       String?
+  type        String   @default("CATEGORY")
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("gig_filters")
+}
+

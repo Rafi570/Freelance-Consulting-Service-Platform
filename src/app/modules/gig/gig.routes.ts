@@ -31,19 +31,19 @@ const parseFormDataAndUpload = catchAsync(
   }
 );
 
-// 1. Standalone Upload 1-4 Gig Images to Cloudinary (PROVIDER only)
+// 1. Standalone Upload 1-4 Gig Images to Cloudinary (PROVIDER and SUPER_ADMIN)
 router.post(
   '/upload-images',
-  auth('PROVIDER'),
+  auth('PROVIDER', 'SUPER_ADMIN'),
   upload.array('images', 6),
   GigController.uploadGigImages
 );
 
-// 2. Create Gig with 3 packages and 3-4 images (PROVIDER only)
+// 2. Create Gig with 3 packages and 3-4 images (PROVIDER and SUPER_ADMIN)
 // Supports both JSON body and Multipart form-data with image files
 router.post(
   '/',
-  auth('PROVIDER'),
+  auth('PROVIDER', 'SUPER_ADMIN'),
   upload.array('images', 6),
   parseFormDataAndUpload,
   validateRequest(GigValidation.createGigValidationSchema),
@@ -72,7 +72,7 @@ router.get('/hero-data', GigController.getHeroData);
 // 5. Public: Get single gig with full packages
 router.get('/:id', GigController.getSingleGig);
 
-// 6. Update gig, images and packages (PROVIDER only)
+// 6. Update gig, images and packages (PROVIDER & SUPER_ADMIN)
 router.patch(
   '/:id',
   auth('PROVIDER', 'SUPER_ADMIN'),
@@ -82,10 +82,10 @@ router.patch(
   GigController.updateGig
 );
 
-// 7. Toggle/Disable/Enable gig status (PROVIDER only)
+// 7. Toggle/Disable/Enable gig status (PROVIDER & SUPER_ADMIN)
 router.patch(
   '/:id/toggle-status',
-  auth('PROVIDER'),
+  auth('PROVIDER', 'SUPER_ADMIN'),
   validateRequest(GigValidation.updateGigStatusValidationSchema),
   GigController.toggleGigStatus
 );

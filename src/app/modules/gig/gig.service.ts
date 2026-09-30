@@ -30,6 +30,17 @@ interface IUpdateGigPayload {
   packages?: IPackagePayload[];
 }
 
+// High-performance in-memory cache
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+const gigsCache = new Map<string, CacheEntry<any>>();
+
+export const clearGigsCache = () => {
+  gigsCache.clear();
+};
+
 const createGig = async (providerId: string, payload: ICreateGigPayload) => {
   // 1. Verify provider profile and subscription status
   const provider = await prisma.user.findUnique({
@@ -37,8 +48,8 @@ const createGig = async (providerId: string, payload: ICreateGigPayload) => {
     include: { profile: true },
   });
 
-  if (!provider || provider.role !== 'PROVIDER') {
-    throw new AppError(403, 'Only registered service providers can create gigs.');
+  if (!provider || (provider.role !== 'PROVIDER' && provider.role !== 'SUPER_ADMIN')) {
+    throw new AppError(403, 'Only registered service providers and administrators can create gigs.');
   }
 
   if (provider.status !== 'ACTIVE') {
@@ -48,19 +59,37 @@ const createGig = async (providerId: string, payload: ICreateGigPayload) => {
     );
   }
 
-  // 2. Enforce 4-Gig Limit for Free Providers
+  // 2. Enforce 4-Gig Limit for Free Providers (Super Admin has unlimited)
   const currentGigCount = await prisma.gig.count({
     where: { providerId },
   });
 
-  const isSubscribed = provider.profile?.isSubscribed ?? false;
+  const isSubscribed = provider.role === 'SUPER_ADMIN' ? true : (provider.profile?.isSubscribed ?? false);
 
-  if (currentGigCount >= 4 && !isSubscribed) {
+  if (provider.role !== 'SUPER_ADMIN' && currentGigCount >= 4 && !isSubscribed) {
     throw new AppError(
       403,
       `Free tier limit reached! You have already created ${currentGigCount} gigs (maximum allowed is 4 for free accounts). Please upgrade to a Premium Subscription to publish unlimited gigs.`
     );
   }
+
+  // 2b. Strictly validate that category exists in active gig filters created by Super Admin
+  const validCategory = await prisma.gigFilter.findFirst({
+    where: {
+      name: { equals: payload.category.trim(), mode: 'insensitive' },
+      type: 'CATEGORY',
+      isActive: true,
+    },
+  });
+
+  if (!validCategory) {
+    throw new AppError(
+      400,
+      `Category "${payload.category}" is not an active category approved by Super Admin. Providers can only choose categories created by Admin.`
+    );
+  }
+
+  const canonicalCategoryName = validCategory.name;
 
   // 3. Create Gig with its 3 packages using a Prisma transaction
   const result = await prisma.$transaction(async (tx) => {
@@ -69,7 +98,7 @@ const createGig = async (providerId: string, payload: ICreateGigPayload) => {
         providerId,
         title: payload.title,
         description: payload.description,
-        category: payload.category,
+        category: canonicalCategoryName,
         tags: payload.tags || [],
         images: payload.images || [],
         packages: {
@@ -104,18 +133,8 @@ const createGig = async (providerId: string, payload: ICreateGigPayload) => {
     return newGig;
   });
 
+  clearGigsCache();
   return result;
-};
-
-// High-performance in-memory cache
-interface CacheEntry<T> {
-  data: T;
-  expiresAt: number;
-}
-const gigsCache = new Map<string, CacheEntry<any>>();
-
-export const clearGigsCache = () => {
-  gigsCache.clear();
 };
 
 const getAllGigs = async (query: Record<string, any>) => {
@@ -143,11 +162,18 @@ const getAllGigs = async (query: Record<string, any>) => {
   const skip = (pageNumber - 1) * limitNumber;
 
   const whereConditions: any = {
-    status: status as any,
     provider: {
       status: 'ACTIVE',
     },
   };
+
+  if (status && status !== 'ALL' && status !== 'all') {
+    whereConditions.status = status as any;
+  }
+
+  if (query.providerId) {
+    whereConditions.providerId = query.providerId;
+  }
 
   if (searchTerm) {
     whereConditions.OR = [
@@ -379,14 +405,23 @@ const getSingleGig = async (id: string) => {
   };
 };
 
-const getMyGigs = async (providerId: string) => {
+const getMyGigs = async (providerId: string, role?: string) => {
+  const whereCondition: any = role === 'SUPER_ADMIN' ? {} : { providerId };
   const [gigs, provider] = await Promise.all([
     prisma.gig.findMany({
-      where: { providerId },
+      where: whereCondition,
       include: {
         packages: {
           orderBy: {
             price: 'asc',
+          },
+        },
+        provider: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            profile: true,
           },
         },
         reviews: {
@@ -413,7 +448,7 @@ const getMyGigs = async (providerId: string) => {
     }),
   ]);
 
-  const isSubscribed = provider?.profile?.isSubscribed ?? false;
+  const isSubscribed = role === 'SUPER_ADMIN' ? true : (provider?.profile?.isSubscribed ?? false);
 
   const formattedGigs = gigs.map((gig) => {
     const totalSold = gig._count?.orders ?? 0;
@@ -447,7 +482,8 @@ const getMyGigs = async (providerId: string) => {
 };
 
 const updateGig = async (
-  providerId: string,
+  userId: string,
+  userRole: string,
   gigId: string,
   payload: IUpdateGigPayload
 ) => {
@@ -459,11 +495,29 @@ const updateGig = async (
     throw new AppError(404, 'Gig not found.');
   }
 
-  if (isGigExist.providerId !== providerId) {
+  if (userRole !== 'SUPER_ADMIN' && isGigExist.providerId !== userId) {
     throw new AppError(403, 'You are not authorized to edit this gig.');
   }
 
   const { packages, ...gigData } = payload;
+
+  if (gigData.category) {
+    const validCategory = await prisma.gigFilter.findFirst({
+      where: {
+        name: { equals: gigData.category.trim(), mode: 'insensitive' },
+        type: 'CATEGORY',
+        isActive: true,
+      },
+    });
+
+    if (!validCategory) {
+      throw new AppError(
+        400,
+        `Category "${gigData.category}" is not an active category approved by Super Admin.`
+      );
+    }
+    gigData.category = validCategory.name;
+  }
 
   const result = await prisma.$transaction(async (tx) => {
     // 1. Update basic gig fields
@@ -524,6 +578,7 @@ const updateGig = async (
     });
   });
 
+  clearGigsCache();
   return result;
 };
 
@@ -548,11 +603,13 @@ const deleteGig = async (
     where: { id: gigId },
   });
 
+  clearGigsCache();
   return { message: 'Gig deleted successfully!' };
 };
 
 const toggleGigStatus = async (
-  providerId: string,
+  userId: string,
+  userRole: string,
   gigId: string,
   specificStatus?: 'ACTIVE' | 'PAUSED' | 'DRAFT'
 ) => {
@@ -564,7 +621,7 @@ const toggleGigStatus = async (
     throw new AppError(404, 'Gig not found.');
   }
 
-  if (isGigExist.providerId !== providerId) {
+  if (userRole !== 'SUPER_ADMIN' && isGigExist.providerId !== userId) {
     throw new AppError(403, 'You are not authorized to toggle this gig.');
   }
 
@@ -581,6 +638,7 @@ const toggleGigStatus = async (
     },
   });
 
+  clearGigsCache();
   return {
     message: `Gig successfully ${
       nextStatus === 'ACTIVE' ? 'activated (enabled)' : 'paused (disabled)'
@@ -596,39 +654,19 @@ const getGigCategories = async () => {
     return cached.data;
   }
 
-  // 1. Fetch distinct active categories from the database
-  const dbGigs = await prisma.gig.findMany({
+  // 1. Fetch ONLY active categories created by Super Admin in gig_filters
+  const adminFilters = await prisma.gigFilter.findMany({
     where: {
-      status: 'ACTIVE',
+      type: 'CATEGORY',
+      isActive: true,
     },
-    select: {
-      category: true,
-    },
-    distinct: ['category'],
+    select: { name: true, label: true },
+    orderBy: { createdAt: 'desc' },
   });
 
-  const dbCategories = dbGigs
-    .map((g) => g.category?.trim())
-    .filter((cat): cat is string => Boolean(cat));
+  const categoryNames = adminFilters.map((f) => f.name.trim());
 
-  // 2. Comprehensive marketplace default categories for full coverage
-  const defaultCategories = [
-    'Graphics & Design',
-    'Programming & Tech',
-    'Digital Marketing',
-    'Video & Animation',
-    'Writing & Translation',
-    'Business & Consulting',
-    'AI Services',
-    'Finance & Accounting',
-  ];
-
-  // 3. Deduplicate preserving active DB categories first
-  const categorySet = new Set<string>();
-  dbCategories.forEach((c) => categorySet.add(c));
-  defaultCategories.forEach((c) => categorySet.add(c));
-
-  // 4. Count active gigs per category
+  // 2. Count active gigs per category
   const categoryCounts = await prisma.gig.groupBy({
     by: ['category'],
     where: {
@@ -641,17 +679,17 @@ const getGigCategories = async () => {
 
   const countMap = new Map<string, number>();
   categoryCounts.forEach((item) => {
-    countMap.set(item.category, item._count.id);
+    countMap.set(item.category.toLowerCase(), item._count.id);
   });
 
-  const categoriesResult = Array.from(categorySet).map((name) => ({
+  const categoriesResult = categoryNames.map((name) => ({
     name,
-    count: countMap.get(name) || 0,
+    count: countMap.get(name.toLowerCase()) || 0,
   }));
 
   gigsCache.set(cacheKey, {
     data: categoriesResult,
-    expiresAt: Date.now() + 300 * 1000, // 5 min cache
+    expiresAt: Date.now() + 5 * 1000,
   });
 
   return categoriesResult;

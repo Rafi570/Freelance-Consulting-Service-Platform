@@ -7,6 +7,7 @@ import { ProviderRoutes } from '../modules/provider/provider.routes';
 import { ReviewRoutes } from '../modules/review/review.routes';
 import { SupportRoutes } from '../modules/support/support.routes';
 import { UserRoutes } from '../modules/user/user.routes';
+import { GigFilterRoutes } from '../modules/gigFilter/gigFilter.routes';
 
 const router = Router();
 
@@ -30,6 +31,10 @@ const moduleRoutes = [
   {
     path: '/gigs',
     route: GigRoutes,
+  },
+  {
+    path: '/gig-filters',
+    route: GigFilterRoutes,
   },
   {
     path: '/orders',
