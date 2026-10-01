@@ -244,6 +244,10 @@ const sendMessageIntoDB = async (
     throw new AppError(403, 'Forbidden! You can only send messages on your own support tickets.');
   }
 
+  if (ticket.status === 'RESOLVED' || ticket.status === 'REJECTED') {
+    throw new AppError(400, 'This support ticket has been closed. You cannot send further messages.');
+  }
+
   const newMessage = await prisma.$transaction(async (tx) => {
     const msg = await tx.supportMessage.create({
       data: {
@@ -264,11 +268,16 @@ const sendMessageIntoDB = async (
       },
     });
 
-    // Update ticket status to IN_REVIEW if user replied
-    if (userContext.role !== UserRole.SUPER_ADMIN && ticket.status === TicketStatus.PENDING) {
+    // Update ticket status based on who replied
+    if (userContext.role === UserRole.SUPER_ADMIN && ticket.status === 'PENDING') {
       await tx.supportTicket.update({
         where: { id: ticket.id },
-        data: { status: TicketStatus.IN_REVIEW },
+        data: { status: 'IN_REVIEW' },
+      });
+    } else if (userContext.role !== UserRole.SUPER_ADMIN && ticket.status === 'IN_REVIEW') {
+      await tx.supportTicket.update({
+        where: { id: ticket.id },
+        data: { status: 'PENDING' },
       });
     }
 
@@ -385,34 +394,58 @@ const reviewTicketByAdminIntoDB = async (
 
     // If APPROVE, unblock the user if they were blocked or suspended
     if (payload.action === 'APPROVE') {
-      updatedUser = await tx.user.update({
-        where: { id: ticket.userId },
-        data: {
-          status: UserStatus.ACTIVE,
-          blockReason: null,
-          blockedAt: null,
-        },
-      });
+      if (ticket.category === 'BLOCK_APPEAL') {
+        updatedUser = await tx.user.update({
+          where: { id: ticket.userId },
+          data: {
+            status: UserStatus.ACTIVE,
+            blockReason: null,
+            blockedAt: null,
+          },
+        });
 
-      // Add automated system/admin message
-      await tx.supportMessage.create({
-        data: {
-          ticketId: ticket.id,
-          senderId: adminUser.id,
-          senderRole: UserRole.SUPER_ADMIN,
-          message: `[SUPER ADMIN RESOLUTION]: Appeal approved! Note: "${payload.adminNotes || 'Valid reason accepted.'}". Your account has been unblocked and restored to ACTIVE status.`,
-        },
-      });
+        // Add automated system/admin message
+        await tx.supportMessage.create({
+          data: {
+            ticketId: ticket.id,
+            senderId: adminUser.id,
+            senderRole: UserRole.SUPER_ADMIN,
+            message: `[SUPER ADMIN RESOLUTION]: Appeal approved! Note: "${payload.adminNotes || 'Valid reason accepted.'}". Your account has been unblocked and restored to ACTIVE status.`,
+          },
+        });
+      } else {
+        // Just resolve a general ticket
+        await tx.supportMessage.create({
+          data: {
+            ticketId: ticket.id,
+            senderId: adminUser.id,
+            senderRole: UserRole.SUPER_ADMIN,
+            message: `[TICKET RESOLVED]: ${payload.adminNotes || 'The issue has been resolved and the ticket is now closed.'}`,
+          },
+        });
+      }
     } else if (payload.action === 'REJECT') {
-      // Add rejection note message
-      await tx.supportMessage.create({
-        data: {
-          ticketId: ticket.id,
-          senderId: adminUser.id,
-          senderRole: UserRole.SUPER_ADMIN,
-          message: `[SUPER ADMIN RESOLUTION]: Appeal rejected. Note: "${payload.adminNotes || 'Reason provided was not sufficient to unblock the account.'}".`,
-        },
-      });
+      if (ticket.category === 'BLOCK_APPEAL') {
+        // Add rejection note message
+        await tx.supportMessage.create({
+          data: {
+            ticketId: ticket.id,
+            senderId: adminUser.id,
+            senderRole: UserRole.SUPER_ADMIN,
+            message: `[SUPER ADMIN RESOLUTION]: Appeal rejected. Note: "${payload.adminNotes || 'Reason provided was not sufficient to unblock the account.'}".`,
+          },
+        });
+      } else {
+        // Just close/reject general ticket
+        await tx.supportMessage.create({
+          data: {
+            ticketId: ticket.id,
+            senderId: adminUser.id,
+            senderRole: UserRole.SUPER_ADMIN,
+            message: `[TICKET CLOSED]: ${payload.adminNotes || 'The ticket was closed without resolution.'}`,
+          },
+        });
+      }
     }
 
     const ticketNewStatus =
