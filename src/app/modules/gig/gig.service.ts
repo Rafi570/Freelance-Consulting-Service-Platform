@@ -406,7 +406,7 @@ const getSingleGig = async (id: string) => {
 };
 
 const getMyGigs = async (providerId: string, role?: string) => {
-  const whereCondition: any = role === 'SUPER_ADMIN' ? {} : { providerId };
+  const whereCondition: any = { providerId };
   const [gigs, provider] = await Promise.all([
     prisma.gig.findMany({
       where: whereCondition,
