@@ -27,4 +27,18 @@ router.get(
   ReviewController.getOrderReview
 );
 
+// Get all reviews (SUPER_ADMIN)
+router.get(
+  '/all',
+  auth('SUPER_ADMIN'),
+  ReviewController.getAllReviews
+);
+
+// Delete a review (SUPER_ADMIN)
+router.delete(
+  '/:id',
+  auth('SUPER_ADMIN'),
+  ReviewController.deleteReview
+);
+
 export const ReviewRoutes = router;

@@ -185,8 +185,64 @@ const getOrderReview = async (
   return order.review;
 };
 
+const getAllReviews = async () => {
+  const reviews = await prisma.review.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      client: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      gig: {
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          provider: {
+            select: {
+              id: true,
+              name: true,
+            }
+          }
+        },
+      },
+      order: {
+        select: {
+          id: true,
+          status: true,
+          price: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+
+  return reviews;
+};
+
+const deleteReview = async (reviewId: string) => {
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+  });
+
+  if (!review) {
+    throw new AppError(404, 'Review not found.');
+  }
+
+  const deletedReview = await prisma.review.delete({
+    where: { id: reviewId },
+  });
+
+  return deletedReview;
+};
+
 export const ReviewService = {
   createReview,
   getGigReviews,
   getOrderReview,
+  getAllReviews,
+  deleteReview,
 };
