@@ -8,10 +8,15 @@ import { ReviewRoutes } from '../modules/review/review.routes';
 import { SupportRoutes } from '../modules/support/support.routes';
 import { UserRoutes } from '../modules/user/user.routes';
 import { GigFilterRoutes } from '../modules/gigFilter/gigFilter.routes';
+import { DashboardRoutes } from '../modules/dashboard/dashboard.routes';
 
 const router = Router();
 
 const moduleRoutes = [
+  {
+    path: '/dashboard',
+    route: DashboardRoutes,
+  },
   {
     path: '/auth',
     route: AuthRoutes,

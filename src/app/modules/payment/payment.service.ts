@@ -204,9 +204,13 @@ const verifyPaymentSession = async (sessionId: string) => {
       const userId = session.metadata?.userId;
       if (userId) {
         await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-          await tx.providerProfile.update({
+          await tx.providerProfile.upsert({
             where: { userId },
-            data: { isSubscribed: true },
+            update: { isSubscribed: true },
+            create: {
+              userId,
+              isSubscribed: true,
+            },
           });
 
           await tx.payment.upsert({

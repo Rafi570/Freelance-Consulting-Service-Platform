@@ -59,17 +59,17 @@ const createGig = async (providerId: string, payload: ICreateGigPayload) => {
     );
   }
 
-  // 2. Enforce 4-Gig Limit for Free Providers (Super Admin has unlimited)
+  // 2. Enforce 3-Gig Limit for Free Providers (Super Admin has unlimited)
   const currentGigCount = await prisma.gig.count({
     where: { providerId },
   });
 
   const isSubscribed = provider.role === 'SUPER_ADMIN' ? true : (provider.profile?.isSubscribed ?? false);
 
-  if (provider.role !== 'SUPER_ADMIN' && currentGigCount >= 4 && !isSubscribed) {
+  if (provider.role !== 'SUPER_ADMIN' && currentGigCount >= 3 && !isSubscribed) {
     throw new AppError(
       403,
-      `Free tier limit reached! You have already created ${currentGigCount} gigs (maximum allowed is 4 for free accounts). Please upgrade to a Premium Subscription to publish unlimited gigs.`
+      `Free tier limit reached! You have already created ${currentGigCount} gigs (maximum allowed is 3 for free accounts). Please upgrade to a Premium Subscription to publish unlimited gigs.`
     );
   }
 
@@ -474,9 +474,9 @@ const getMyGigs = async (providerId: string, role?: string) => {
 
   return {
     isSubscribed,
-    gigLimit: isSubscribed ? 'Unlimited' : 4,
+    gigLimit: isSubscribed ? 'Unlimited' : 3,
     totalCreated: formattedGigs.length,
-    remainingFreeGigs: isSubscribed ? 'Unlimited' : Math.max(0, 4 - formattedGigs.length),
+    remainingFreeGigs: isSubscribed ? 'Unlimited' : Math.max(0, 3 - formattedGigs.length),
     gigs: formattedGigs,
   };
 };
